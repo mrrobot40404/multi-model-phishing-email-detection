@@ -1,0 +1,96 @@
+# SpamAssassin configuration file
+
+# Lower the required score threshold to catch more spam
+required_score 2.1
+
+# Enable Bayesian filtering
+use_bayes 1
+bayes_auto_learn 1
+bayes_min_ham_num 200
+bayes_min_spam_num 200
+
+# Enable core plugins
+#loadplugin Mail::SpamAssassin::Plugin::URLEval
+loadplugin Mail::SpamAssassin::Plugin::ASN
+loadplugin Mail::SpamAssassin::Plugin::PDFInfo
+loadplugin Mail::SpamAssassin::Plugin::HashBL
+loadplugin Mail::SpamAssassin::Plugin::TextCat
+
+# Add custom scoring rules
+score BAYES_99 3.5
+score BAYES_00 -3.5
+score RDNS_NONE 1.0
+score HTML_IMAGE_ONLY 1.0
+score MIME_HTML_ONLY 0.5
+score UPPERCASE_50_75 1.0
+score UPPERCASE_75_100 2.0
+score URI_HEX 1.0
+score ADULT_CONTENT 2.0
+score SUSPICIOUS_KEYWORDS 2.0
+score URGENT_SUBJECT 1.5
+score MONEY_KEYWORDS 1.5
+score PHISH_STRUCTURE 2.0
+score LEGITIMATE_LINKS -1.0
+
+# URL patterns
+uri LEGITIMATE_LINKS /(?:github\.com|sourceforge\.net|\.edu|\.gov|\/mailman\/listinfo)/i
+describe LEGITIMATE_LINKS Contains links to legitimate platforms
+
+# Custom rules for adult content
+body ADULT_CONTENT /\b(?:sex|horny|xxx|porn|adult|naked|nude|hot.*singles)\b/i
+describe ADULT_CONTENT Contains adult/inappropriate content
+
+# Custom rules for phishing detection
+body SUSPICIOUS_KEYWORDS /\b(?:verify|confirm|update|security|account|login|password|credit.?card|ssn|social.?security)\b/i
+describe SUSPICIOUS_KEYWORDS Contains common phishing keywords
+
+header URGENT_SUBJECT Subject =~ /\b(?:urgent|important|immediate|attention|action.?required)\b/i
+describe URGENT_SUBJECT Subject contains urgent keywords
+
+body MONEY_KEYWORDS /\b(?:million|billion|dollars|money|cash|wire|transfer|bank|account|payment)\b/i
+describe MONEY_KEYWORDS Contains money-related keywords
+
+# Phishing structure patterns
+body PHISH_STRUCTURE /(?:\b(?:click|login|sign|verify).{0,30}(?:link|here|below)\b)|(?:\b(?:account|password).{0,30}(?:verify|confirm|update)\b)/i
+describe PHISH_STRUCTURE Contains typical phishing message structure
+
+# Custom rules for suspicious formatting
+body UPPERCASE_50_75     eval:check_for_uppercase('50','75')
+body UPPERCASE_75_100    eval:check_for_uppercase('75','100')
+
+# URLs and link detection
+uri URI_HEX             m{^https?://[^/]+/.*?%[0-9A-F]{2}}i
+describe URI_HEX        URI uses hex encoding
+
+# Enable RBL (Real-time Blackhole List) checks
+score URIBL_BLACK 7.5
+score URIBL_RED 3.0
+score URIBL_GREY 2.0
+
+# DNS blacklist settings
+dns_available yes
+skip_rbl_checks 0
+
+# Shortcircuit certain rules for efficiency
+ifplugin Mail::SpamAssassin::Plugin::Shortcircuit
+    shortcircuit BAYES_99                spam
+    shortcircuit BAYES_00                ham
+    shortcircuit URIBL_BLACK             spam
+    shortcircuit USER_IN_BLACKLIST       spam
+endif
+
+# Text body scanning limits
+body_part_scan_size 100000
+rawbody_part_scan_size 700000
+
+# Report customization
+report_safe 1
+rewrite_header Subject *****SPAM*****
+
+# Improve Bayesian learning
+bayes_ignore_header X-Spam-Flag
+bayes_ignore_header X-Spam-Status
+bayes_ignore_header X-Spam-Level
+
+# Enable charset normalization
+normalize_charset 1

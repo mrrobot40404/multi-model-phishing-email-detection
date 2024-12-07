@@ -2,6 +2,8 @@
 
 Files for the local_UI are in the local_UI folder. To run just run the InputUI 1.py file
 
+Similarly, to run the proof of concept web version of the UI, simply navigate to the web_UI folder and run app.py.
+
 Follow the README in PhishingDetectorModel to run/finetune/evaluate the Llama fine-tuned model
 
 
